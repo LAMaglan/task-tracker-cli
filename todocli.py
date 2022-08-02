@@ -1,7 +1,8 @@
 import typer
 from rich.console import Console
 from rich.table import Table
-
+from model import Todo
+from database import get_all_todos, delete_todo, insert_todo, complete_todo, update_todo
 
 console = Console()
 
@@ -12,28 +13,34 @@ app = typer.Typer()
 def add(task: str, category: str):
     # print to command line
     typer.echo(f"adding {task}, {category}")
-    #function defined lower in file
+    todo = Todo(task, category)
+    insert_todo(todo)
+    #show() function defined lower in file
     show() 
 
 @app.command()
 def delete(position: int):
     typer.echo(f"deleting {position}")
+    # indices in UI begin at 1, but in database at 0
+    delete_todo(position-1)
     show()
 
 @app.command()
 def update(position: int, task: str = None, category: str = None):
     typer.echo(f"updating {position}")
+    update_todo(position-1, task, category)
     show()
 
 @app.command()
 def complete(position: int):
     typer.echo(f"complete {position}")
+    complete_todo(position-1)
     show()
 
 
 @app.command()
 def show():
-    tasks = [("Todo1", "Study"), ("Todo2", "Sports")]
+    tasks = get_all_todos()
     # colour styling possible due to "rich"
     console.print("[bold magenta]Todos[/bold magenta]!", "💻")
 
@@ -52,9 +59,9 @@ def show():
 
     # start loop at 1 instead of default 0
     for idx, task in enumerate(tasks, start=1):
-        c = get_category_color(task[1])
-        is_done_str = '✅' if True == 2 else '❌'
-        table.add_row(str(idx), task[0], f'[{c}]{task[1]}[/{c}]', is_done_str)
+        c = get_category_color(task.category)
+        is_done_str = '✅' if task.status == 2 else '❌'
+        table.add_row(str(idx), task.task, f'[{c}]{task.category}[/{c}]', is_done_str)
     console.print(table)
 
 
